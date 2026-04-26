@@ -45,7 +45,7 @@ const SUGGESTIONS = [
   { text: "What emails did I get today?",                icon: MdEmail },
   { text: "Search emails from rahulthapa9024@gmail.com", icon: MdEmail },
   { text: "What did @rahulthapa9024 say on Telegram?",   icon: FaTelegramPlane },
-  { text: "WhatsApp +919664997058 saying 'Hi'",          icon: FaWhatsapp },
+  { text: "Send a Message saying Hi on WhatsApp to +919664997058",          icon: FaWhatsapp },
   { text: "Latest AI news this week",                    icon: FiGlobe },
 ];
 
@@ -114,7 +114,7 @@ function BrandMark({ size = 'md' }) {
       </div>
       <div className="leading-none">
         <div className={`font-serif italic ${s} text-[var(--fg)] tracking-tight`}>
-          PolyAgent
+          Poly-Agent
         </div>
         <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-[var(--fg-muted)] mt-0.5">
           multi-platform agent
