@@ -1,14 +1,7 @@
 from mail_service.email_agent.email_connection import get_mail
+from mail_service.utils.utils import format_email_message
 from datetime import datetime
 import email
-
-def extract_body(msg):
-    if msg.is_multipart():
-        for part in msg.walk():
-            if part.get_content_type() == "text/plain":
-                return part.get_payload(decode=True).decode(errors="ignore")
-    else:
-        return msg.get_payload(decode=True).decode(errors="ignore")
 
 def fetch_today(limit=100):
     mail = get_mail()
@@ -36,13 +29,7 @@ def fetch_today(limit=100):
         for part in msg_data:
             if isinstance(part, tuple):
                 msg = email.message_from_bytes(part[1])
-
-                results.append({
-                    "subject": msg.get("subject"),
-                    "from": msg.get("from"),
-                    "date": msg.get("date"),
-                    "body": extract_body(msg)
-                })
+                results.append(format_email_message(msg))
 
     mail.logout()
     return results

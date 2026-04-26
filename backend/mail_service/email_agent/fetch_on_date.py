@@ -1,20 +1,13 @@
 from mail_service.email_agent.email_connection import get_mail
-from mail_service.utils.utils import get_next_day
+from mail_service.utils.utils import get_next_day, format_email_message, normalize_date_for_imap
 import email
-
-def extract_body(msg):
-    if msg.is_multipart():
-        for part in msg.walk():
-            if part.get_content_type() == "text/plain":
-                return part.get_payload(decode=True).decode(errors="ignore")
-    else:
-        return msg.get_payload(decode=True).decode(errors="ignore")
 
 def fetch_on_date(date, limit=100):
     mail = get_mail()
 
-    next_day = get_next_day(date)
-    query = f'(SINCE "{date}" BEFORE "{next_day}")'
+    date_norm = normalize_date_for_imap(date)
+    next_day = get_next_day(date_norm)
+    query = f'(SINCE "{date_norm}" BEFORE "{next_day}")'
 
     status, messages = mail.search(None, query)
 
@@ -36,13 +29,7 @@ def fetch_on_date(date, limit=100):
         for part in msg_data:
             if isinstance(part, tuple):
                 msg = email.message_from_bytes(part[1])
-
-                results.append({
-                    "subject": msg.get("subject"),
-                    "from": msg.get("from"),
-                    "date": msg.get("date"),
-                    "body": extract_body(msg)
-                })
+                results.append(format_email_message(msg))
 
     mail.logout()
     return results

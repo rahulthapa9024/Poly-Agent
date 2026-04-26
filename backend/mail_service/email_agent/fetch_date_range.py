@@ -1,10 +1,15 @@
 from mail_service.email_agent.email_connection import get_mail
+from mail_service.utils.utils import format_email_message, normalize_date_for_imap
 import email
 
 def fetch_date_range(start_date, end_date, limit=10):
     mail = get_mail()
 
-    query = f'(SINCE "{start_date}" BEFORE "{end_date}")'
+    # Normalize dates for IMAP (DD-Mon-YYYY)
+    start_norm = normalize_date_for_imap(start_date)
+    end_norm = normalize_date_for_imap(end_date)
+
+    query = f'(SINCE "{start_norm}" BEFORE "{end_norm}")'
     status, messages = mail.search(None, query)
 
     if status != "OK":
@@ -26,12 +31,7 @@ def fetch_date_range(start_date, end_date, limit=10):
         for part in msg_data:
             if isinstance(part, tuple):
                 msg = email.message_from_bytes(part[1])
-
-                results.append({
-                    "subject": msg.get("subject"),
-                    "from": msg.get("from"),
-                    "date": msg.get("date"),
-                })
+                results.append(format_email_message(msg))
 
     mail.logout()
     return results

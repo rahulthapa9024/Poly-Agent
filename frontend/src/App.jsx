@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './App.css';
 
 const API_BASE = 'http://localhost:8000';
@@ -13,7 +15,6 @@ const CAPABILITIES = [
     commands: [
       'Read messages from @user',
       'Send message to @user',
-      'Fetch & index Telegram chat',
     ],
   },
   {
@@ -35,17 +36,18 @@ const CAPABILITIES = [
       'Get last N emails',
       'Emails from specific sender',
       'Emails on date / range',
-      'Fetch & index recent emails',
+      'Fetch recent emails',
+      'Send Email',
     ],
   },
   {
     key: 'rag',
-    label: 'Knowledge Base',
-    icon: '🧠',
+    label: 'Web Search',
+    icon: '🌐',
     cls: 'rag',
     commands: [
-      'Search indexed data',
-      'Context-aware responses',
+      'Search the web',
+      'Latest information',
     ],
   },
 ];
@@ -53,11 +55,10 @@ const CAPABILITIES = [
 // ─── Suggested prompts ───────────────────────────────────────────────────────
 const SUGGESTIONS = [
   "Search my emails for 'invoice'",
-  "What did @rahul say on Telegram?",
-  "Fetch my last 5 emails and index them",
-  "Send 'See you soon' to @rahul on Telegram",
-  "Send WhatsApp to +919664997058 saying 'Hi'",
   "What emails did I receive today?",
+  "What did @rahul say on Telegram?",
+  "Send WhatsApp to +919664997058 saying 'Hi'",
+  "Search the web for latest AI news",
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -72,9 +73,9 @@ function genId() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 function StatusIndicator({ status }) {
   const labels = {
-    online:   '🟢 Agent online',
-    offline:  '🔴 Backend offline',
-    checking: '🟡 Checking…',
+    online:   'Agent online',
+    offline:  'Backend offline',
+    checking: 'Checking…',
   };
   return (
     <div className="status-indicator">
@@ -104,7 +105,6 @@ function Sidebar({ onSuggest }) {
 
   return (
     <aside className="sidebar">
-      {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon">🤖</div>
         <div className="sidebar-brand-text">
@@ -113,23 +113,23 @@ function Sidebar({ onSuggest }) {
         </div>
       </div>
 
-      {/* Capabilities */}
       <span className="sidebar-section-label">Capabilities</span>
-      {CAPABILITIES.map(cap => (
-        <div className="capability-card" key={cap.key}>
-          <div className="capability-header">
-            <div className={`capability-icon ${cap.cls}`}>{cap.icon}</div>
-            <span className="capability-title">{cap.label}</span>
+      <div className="capability-list">
+        {CAPABILITIES.map(cap => (
+          <div className="capability-card" key={cap.key}>
+            <div className="capability-header">
+              <div className={`capability-icon ${cap.cls}`}>{cap.icon}</div>
+              <span className="capability-title">{cap.label}</span>
+            </div>
+            <div className="capability-commands">
+              {cap.commands.map(cmd => (
+                <span className="cmd-chip" key={cmd}>{cmd}</span>
+              ))}
+            </div>
           </div>
-          <div className="capability-commands">
-            {cap.commands.map(cmd => (
-              <span className="cmd-chip" key={cmd}>{cmd}</span>
-            ))}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {/* Status */}
       <div className="status-bar">
         <StatusIndicator status={status} />
       </div>
@@ -144,7 +144,11 @@ function MessageBubble({ msg }) {
         {msg.role === 'user' ? '👤' : '🤖'}
       </div>
       <div className="message-content-wrap">
-        <div className="message-bubble">{msg.content}</div>
+        <div className="message-bubble">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {msg.content}
+          </ReactMarkdown>
+        </div>
         <span className="message-timestamp">{msg.time}</span>
       </div>
     </div>
@@ -170,10 +174,10 @@ function EmptyState({ onSuggest }) {
   return (
     <div className="empty-state">
       <div className="empty-state-icon">🤖</div>
-      <h3>What can I help with?</h3>
+      <h3>How can I help you today?</h3>
       <p>
-        I can read and send <strong>Telegram</strong> messages, send <strong>WhatsApp</strong> messages,
-        and retrieve your <strong>emails</strong> — just ask naturally.
+        I am your unified agent for <strong>Telegram</strong>, <strong>WhatsApp</strong>, 
+        and <strong>Email</strong>. I can also search the web for you.
       </p>
       <div className="suggestion-chips">
         {SUGGESTIONS.map(s => (
@@ -190,7 +194,6 @@ function EmptyState({ onSuggest }) {
   );
 }
 
-// ─── Main App ────────────────────────────────────────────────────────────────
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState('');
@@ -199,12 +202,10 @@ export default function App() {
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -237,16 +238,20 @@ export default function App() {
 
       let agentContent = '';
       if (data.tool_used) {
-        // Format tool result nicely
         const toolName = data.tool_used.replace(/_/g, ' ');
         const capitalizedTool = toolName.charAt(0).toUpperCase() + toolName.slice(1);
         
-        // If result is an object/array, stringify it, otherwise use it as is
-        const resultStr = typeof data.result === 'object' 
-          ? JSON.stringify(data.result, null, 2) 
-          : String(data.result);
+        const isEmailTool = data.tool_used.includes('fetch_') && (data.tool_used.includes('email') || data.tool_used.includes('today') || data.tool_used.includes('recent'));
 
-        agentContent = `🛠️ **Used Tool:** ${capitalizedTool}\n\n**Result:**\n${resultStr}`;
+        if (isEmailTool) {
+          // For email tools, we already have a nice markdown string from backend
+          agentContent = `🛠️ **Used Tool:** ${capitalizedTool}\n\n${data.result}`;
+        } else {
+          const resultStr = typeof data.result === 'object' 
+            ? JSON.stringify(data.result, null, 2) 
+            : String(data.result);
+          agentContent = `🛠️ **Used Tool:** ${capitalizedTool}\n\n**Result:**\n${resultStr}`;
+        }
       } else {
         agentContent = data.message;
       }
@@ -277,16 +282,14 @@ export default function App() {
       <Sidebar onSuggest={sendMessage} />
 
       <main className="chat-area">
-        {/* Header */}
         <header className="chat-header">
           <div className="chat-header-icon">🤖</div>
           <div className="chat-header-info">
             <h2>Multi-Platform Agent</h2>
-            <p>Powered by LLaMA 3.2 · Telegram · WhatsApp · Email</p>
+            <p>Powered by LLaMA 3.2 · Integrated Ecosystem</p>
           </div>
         </header>
 
-        {/* Messages */}
         <div className="messages-container">
           {messages.length === 0 && !loading ? (
             <EmptyState onSuggest={sendMessage} />
@@ -303,14 +306,13 @@ export default function App() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div className="input-bar">
           <div className="input-form">
             <textarea
               id="chat-input"
               ref={textareaRef}
               className="message-input"
-              placeholder="Ask me to send a message, read emails, or anything…"
+              placeholder="Type a message..."
               value={input}
               rows={1}
               onChange={e => setInput(e.target.value)}
@@ -322,7 +324,6 @@ export default function App() {
               className="send-btn"
               onClick={() => sendMessage()}
               disabled={!input.trim() || loading}
-              aria-label="Send message"
             >
               {loading
                 ? <span className="spinner" />
@@ -330,7 +331,7 @@ export default function App() {
               }
             </button>
           </div>
-          <p className="input-hint">Press Enter to send · Shift+Enter for new line</p>
+          <p className="input-hint">Enter to send · Shift+Enter for new line</p>
         </div>
       </main>
     </div>

@@ -13,7 +13,8 @@ from tools.tools import (
     fetch_emails_on_date,
     fetch_today_emails,
     fetch_sender_emails_on_date,
-    search_web
+    send_email,
+    web_search
 )
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,7 +42,8 @@ tools = [
     fetch_emails_on_date,
     fetch_today_emails,
     fetch_sender_emails_on_date,
-    search_web
+    send_email,
+    web_search
 ]
 
 # ---------------------------
@@ -95,6 +97,37 @@ async def chat(request: ChatRequest):
 
             if selected_tool:
                 result = await selected_tool.ainvoke(tool_args)
+
+                # ---------------------------------------------------------
+                # Format Email Results for Better Frontend Display
+                # ---------------------------------------------------------
+                email_tools = [
+                    "fetch_emails_by_date",
+                    "fetch_emails_from_sender",
+                    "fetch_recent_emails",
+                    "fetch_emails_on_date",
+                    "fetch_today_emails",
+                    "fetch_sender_emails_on_date"
+                ]
+
+                if tool_name in email_tools:
+                    if isinstance(result, list) and len(result) > 0:
+                        formatted_emails = []
+                        for email_data in result:
+                            # Clean up the content to avoid excessive newlines
+                            content = email_data.get("content", "No content").strip()
+                            
+                            email_str = (
+                                f"### 📧 {email_data.get('subject', 'No Subject')}\n"
+                                f"**From:** {email_data.get('from', 'Unknown')}\n"
+                                f"**Date:** {email_data.get('date', 'Unknown')}\n\n"
+                                f"{content}\n"
+                                f"\n---\n"
+                            )
+                            formatted_emails.append(email_str)
+                        result = "\n".join(formatted_emails)
+                    elif isinstance(result, list) and len(result) == 0:
+                        result = "No emails found matching your request."
 
                 return {
                     "status": "success",
