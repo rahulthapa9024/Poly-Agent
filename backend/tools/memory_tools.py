@@ -12,7 +12,7 @@ pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index_name = os.getenv("PINECONE_INDEX_NAME")
 
 # Initialize Embeddings
-embeddings = OllamaEmbeddings(model="nomic-embed-text")
+embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 
 # Initialize Vector Store
 vectorstore = PineconeVectorStore(index_name=index_name, embedding=embeddings)

@@ -256,10 +256,12 @@ General Conversation Tool
 _______________________________________________
 """
 @tool
-def general_chat(query: str):
+def general_chat(query: str = "general inquiry"):
     """
-    Use this tool for general conversation, answering questions, brainstorming, 
-    or when the user just wants to talk without performing a specific action 
-    like sending emails or searching the web.
+    Use this tool to handle specific, detailed questions or brainstorming requests 
+    that don't fall into categories like email or search. 
+    
+    IMPORTANT: DO NOT use this tool for simple greetings like 'hello' or 'hi'. 
+    For greetings, reply directly without using any tools.
     """
-    return f"I'm here to help! Regarding '{query}', I think we can discuss this further. What specific details would you like to explore?"
+    return f"I'm here to help!"

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import json
 from typing import Annotated, TypedDict, List, Union, Dict, Any
 
 from fastapi import FastAPI
@@ -217,8 +218,13 @@ async def chat(request: ChatRequest):
                 break
 
         if tool_used:
+            try:
+                parsed_result = json.loads(tool_result) if isinstance(tool_result, str) and (tool_result.startswith('[') or tool_result.startswith('{')) else tool_result
+            except json.JSONDecodeError:
+                parsed_result = tool_result
+
             formatted_result = format_email_results(
-                eval(tool_result) if isinstance(tool_result, str) and tool_result.startswith('[') else tool_result, 
+                parsed_result, 
                 tool_used
             )
             return {
