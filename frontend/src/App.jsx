@@ -53,6 +53,28 @@ const CAPABILITIES = [
       'Latest information',
     ],
   },
+  {
+    key: 'memory',
+    label: 'Long-term Memory',
+    icon: <FiCpu />,
+    cls: 'from-purple-500/20 to-purple-400/20 text-purple-400',
+    commands: [
+      'Save to memory',
+      'Search my past notes',
+      'What do you know about me?',
+    ],
+  },
+  {
+    key: 'chat',
+    label: 'Assistant Chat',
+    icon: <FaRobot />,
+    cls: 'from-slate-500/20 to-slate-400/20 text-slate-400',
+    commands: [
+      'Brainstorm ideas',
+      'Answering questions',
+      'General chit-chat',
+    ],
+  },
 ];
 
 // ─── Suggested prompts ───────────────────────────────────────────────────────
@@ -261,19 +283,12 @@ export default function App() {
 
       let agentContent = '';
       if (data.tool_used) {
-        const toolName = data.tool_used.replace(/_/g, ' ');
-        const capitalizedTool = toolName.charAt(0).toUpperCase() + toolName.slice(1);
-        
-        const isEmailTool = data.tool_used.includes('fetch_') && (data.tool_used.includes('email') || data.tool_used.includes('today') || data.tool_used.includes('recent'));
-
-        if (isEmailTool) {
-          agentContent = `🛠️ **Used Tool:** ${capitalizedTool}\n\n${data.result}`;
-        } else {
-          const resultStr = typeof data.result === 'object' 
-            ? JSON.stringify(data.result, null, 2) 
-            : String(data.result);
-          agentContent = `🛠️ **Used Tool:** ${capitalizedTool}\n\n**Result:**\n${resultStr}`;
-        }
+        const resultStr = typeof data.result === 'object' 
+          ? JSON.stringify(data.result, null, 2) 
+          : String(data.result);
+          
+        // Combine the agent's summary and the raw tool result for a complete but clean answer
+        agentContent = `${data.message}\n\n${resultStr}`;
       } else {
         agentContent = data.message;
       }

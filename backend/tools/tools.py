@@ -246,3 +246,20 @@ def web_search(query: str):
     response = search_web(query)
 
     return response["results"]
+
+
+"""
+_______________________________________________
+
+General Conversation Tool
+
+_______________________________________________
+"""
+@tool
+def general_chat(query: str):
+    """
+    Use this tool for general conversation, answering questions, brainstorming, 
+    or when the user just wants to talk without performing a specific action 
+    like sending emails or searching the web.
+    """
+    return f"I'm here to help! Regarding '{query}', I think we can discuss this further. What specific details would you like to explore?"
