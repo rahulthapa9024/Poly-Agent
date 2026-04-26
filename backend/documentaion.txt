@@ -1,4 +1,0 @@
-telegram :- read,write 
-whatsapp :- write
-web :- search
-emails :- send_to_user ,get_recent_emails ,fetch_today_emails,fetch_from_user,fetch_in_range,fetch_on_date,fetch_from_user_on_date
