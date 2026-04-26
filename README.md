@@ -2,7 +2,8 @@
 
 Poly-Agent is a powerful, agentic AI assistant designed to unify your communication platforms. Built with **LangGraph** and **FastAPI**, it can read and send messages across **Telegram**, **WhatsApp**, and **Gmail**, search the web in real-time using **Tavily**, and maintain long-term memory via **Pinecone**.
 
-![Demo Mockup](https://raw.githubusercontent.com/rahulthapa9024/multi-platform-agent/main/demo.png) *(Placeholder for your demo image)*
+<img src="./preview1.png">
+<img src="./preview2.png">
 
 ---
 
